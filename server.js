@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
 const User = require('./model/user');
-const bcrypt = require('bcrypt');
+const bcryptjs = require('bcryptjs');
 const session = require('express-session');
 const flash = require('connect-flash');
 const initializePassport = require('./passport-config');
@@ -49,7 +49,7 @@ app.get('/login', (req, res) => {
 //Register route
 app.post('/register', async (req, res) => {
   //Hash password
-  const hashPassw = await bcrypt.hash(req.body.password, 10);
+  const hashPassw = await bcryptjs.hash(req.body.password, 10);
   const user = new User({
     name: req.body.name,
     email: req.body.email,
