@@ -5,7 +5,9 @@ const User = require('./model/user');
 const bcryptjs = require('bcryptjs');
 const session = require('express-session');
 const flash = require('connect-flash');
-const initializePassport = require('./passport-config');
+const passportFunctions = require('./passport-config')
+const initializePassport = passportFunctions.initializePassport;
+const checkAuthentication = passportFunctions.checkAuthentication;
 const path = require('path');
 if (process.env.NODE_ENV !== 'production') {
   const dotenv = require('dotenv');
@@ -21,7 +23,7 @@ db.once('open', () => console.log('connected to mongoose'));
 const passport = initializePassport();
 
 //Middlewares
-app.use(express.json());
+app.use(express.urlencoded());
 app.use(session({
   secret: process.env.COOKIE_SIGNATURE,
   resave: false,
@@ -32,19 +34,19 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
+
 //Home route
-app.get('/', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html')); // Relative path
-});
+app.use(express.static('client/build'));
 
 //Login route
 app.post('/login', passport.authenticate('local',
   { failureRedirect: '/login', successRedirect: '/', failureFlash: true }
 ));
 
-app.get('/login', (req, res) => {
+
+app.get('/', checkAuthentication, (req, res) => {
   res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
-});
+})
 
 //Register route
 app.post('/register', async (req, res) => {
@@ -64,7 +66,7 @@ app.post('/register', async (req, res) => {
       if (err) {
         res.status(400).send(err);
       } else {
-        res.send({ user: user._id });
+        res.redirect('/');
       }
     }
   })

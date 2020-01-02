@@ -1,5 +1,5 @@
 const LocalStrategy = require('passport-local').Strategy;
-var passport = require('passport');
+const passport = require('passport');
 const User = require('./model/user');
 const bcryptjs = require('bcryptjs');
 
@@ -17,18 +17,26 @@ function initializePassport() {
       });
     }
   ));
-
   passport.serializeUser((user, done) => {
     done(null, user.id);
   });
-
   passport.deserializeUser((id, done) => {
     User.findById(id, (err, user) => {
       done(err, user);
     });
   });
-
   return passport;
 }
 
-module.exports = initializePassport;
+function checkAuthentication(req, res, next) {
+  if (req.isAuthenticated()) {
+    next();
+  } else {
+    res.redirect("/login");
+  }
+}
+
+module.exports = {
+  initializePassport,
+  checkAuthentication,
+}
