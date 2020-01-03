@@ -6,7 +6,7 @@ const bcryptjs = require('bcryptjs');
 const session = require('express-session');
 const flash = require('connect-flash');
 const passportFunctions = require('./passport-config')
-const initializePassport = passportFunctions.initializePassport;
+const configurePassport = passportFunctions.configurePassport;
 const checkAuthentication = passportFunctions.checkAuthentication;
 const path = require('path');
 if (process.env.NODE_ENV !== 'production') {
@@ -20,33 +20,86 @@ db.on('error', (error) => console.log(error));
 db.once('open', () => console.log('connected to mongoose'));
 
 //Initialize Passport
-const passport = initializePassport();
+const pass = configurePassport();
 
 //Middlewares
-app.use(express.urlencoded());
 app.use(session({
   secret: process.env.COOKIE_SIGNATURE,
   resave: false,
   saveUninitialized: false,
   cookie: { secure: true }
 }));
-app.use(passport.initialize());
-app.use(passport.session());
+app.use(express.urlencoded({ extended: true }));
+
+pass.serializeUser((user, done) => {
+  done(null, user.id);
+});
+pass.deserializeUser((id, done) => {
+  console.log('id is ' + id);
+  User.findById(id, (err, user) => {
+    done(err, user);
+  });
+});
+app.use(pass.initialize());
+app.use(pass.session());
+
 app.use(flash());
 
+//Login route
+app.post('/login', function (req, res, next) {
+  pass.authenticate('local', function (err, user) {
+    console.log(user);
+    if (err) {
+      return next(err);
+    }
+    if (!user) { return res.redirect('/login'); }
+    req.login(user, (loginErr) => {
+      console.log('aqui');
+      if (loginErr) {
+        console.log('loginerr');
+        return next(loginErr);
+      }
+      console.log('1' + req.isAuthenticated());
+      return res.redirect('/');
+    });
+  })(req, res, next);
+});
+
+
+
+
+
+
+app.get('/', (req, res) => {
+  console.log('2' + req.isAuthenticated());
+  if (req.isAuthenticated()) {
+    res.redirect('/');
+  } else {
+    res.redirect('/login');
+  }
+})
+
+app.get('/register', (req, res) => {
+  if (req.isAuthenticated()) {
+    res.redirect('/');
+  } else {
+    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+  }
+})
+
+app.get('/login', (req, res, next) => {
+  if (req.isAuthenticated()) {
+    res.redirect('/');
+  } else {
+    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+
+  }
+
+
+})
 
 //Home route
 app.use(express.static('client/build'));
-
-//Login route
-app.post('/login', passport.authenticate('local',
-  { failureRedirect: '/login', successRedirect: '/', failureFlash: true }
-));
-
-
-app.get('/', checkAuthentication, (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
-})
 
 //Register route
 app.post('/register', async (req, res) => {
@@ -66,7 +119,7 @@ app.post('/register', async (req, res) => {
       if (err) {
         res.status(400).send(err);
       } else {
-        res.redirect('/');
+        res.redirect('/login');
       }
     }
   })
