@@ -27,7 +27,7 @@ const sessionProperties = {
   saveUninitialized: false,
 };
 if (process.env.NODE_ENV == 'production') {
-  sessionProperties.secure = true; //By default is false for dev enviorment
+  sessionProperties.secure = true; //By default is false for dev enviornment
 }
 app.use(session(sessionProperties));
 app.use(express.urlencoded({ extended: true }));
@@ -57,7 +57,7 @@ app.get('/', (req, res) => {
   } else {
     res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
   }
-})
+});
 
 app.get('/register', (req, res) => {
   if (req.isAuthenticated()) {
@@ -65,7 +65,7 @@ app.get('/register', (req, res) => {
   } else {
     res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
   }
-})
+});
 
 app.get('/login', (req, res, next) => {
   if (req.isAuthenticated()) {
@@ -73,7 +73,12 @@ app.get('/login', (req, res, next) => {
   } else {
     res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
   }
-})
+});
+
+app.get('/logout', (req, res) => {
+  req.logout();
+  res.redirect('/login');
+});
 
 //Home route
 app.use(express.static('client/build'));
