@@ -21,18 +21,17 @@ function configurePassport() {
       });
     }
   ));
+  passport.serializeUser((user, done) => {
+    done(null, user.id);
+  });
+  passport.deserializeUser((id, done) => {
+    User.findById(id, (err, user) => {
+      done(err, user);
+    });
+  });
+
   return passport;
 }
 
-function checkAuthentication(req, res, next) {
-  if (!req.isAuthenticated()) {
-    console.log('menelao');
-    res.redirect("/login");
-  }
-  next();
-}
+module.exports = configurePassport;
 
-module.exports = {
-  configurePassport,
-  checkAuthentication,
-}

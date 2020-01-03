@@ -5,9 +5,7 @@ const User = require('./model/user');
 const bcryptjs = require('bcryptjs');
 const session = require('express-session');
 const flash = require('connect-flash');
-const passportFunctions = require('./passport-config')
-const configurePassport = passportFunctions.configurePassport;
-const checkAuthentication = passportFunctions.checkAuthentication;
+const configurePassport = require('./passport-config');
 const path = require('path');
 if (process.env.NODE_ENV !== 'production') {
   const dotenv = require('dotenv');
@@ -23,59 +21,41 @@ db.once('open', () => console.log('connected to mongoose'));
 const pass = configurePassport();
 
 //Middlewares
-app.use(session({
+const sessionProperties = {
   secret: process.env.COOKIE_SIGNATURE,
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: true }
-}));
+};
+if (process.env.NODE_ENV == 'production') {
+  sessionProperties.secure = true; //By default is false for dev enviorment
+}
+app.use(session(sessionProperties));
 app.use(express.urlencoded({ extended: true }));
-
-pass.serializeUser((user, done) => {
-  done(null, user.id);
-});
-pass.deserializeUser((id, done) => {
-  console.log('id is ' + id);
-  User.findById(id, (err, user) => {
-    done(err, user);
-  });
-});
 app.use(pass.initialize());
 app.use(pass.session());
-
 app.use(flash());
 
 //Login route
 app.post('/login', function (req, res, next) {
   pass.authenticate('local', function (err, user) {
-    console.log(user);
     if (err) {
       return next(err);
     }
     if (!user) { return res.redirect('/login'); }
     req.login(user, (loginErr) => {
-      console.log('aqui');
       if (loginErr) {
-        console.log('loginerr');
         return next(loginErr);
       }
-      console.log('1' + req.isAuthenticated());
       return res.redirect('/');
     });
   })(req, res, next);
 });
 
-
-
-
-
-
 app.get('/', (req, res) => {
-  console.log('2' + req.isAuthenticated());
-  if (req.isAuthenticated()) {
-    res.redirect('/');
-  } else {
+  if (!req.isAuthenticated()) {
     res.redirect('/login');
+  } else {
+    res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
   }
 })
 
@@ -92,10 +72,7 @@ app.get('/login', (req, res, next) => {
     res.redirect('/');
   } else {
     res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
-
   }
-
-
 })
 
 //Home route
