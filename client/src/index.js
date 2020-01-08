@@ -4,7 +4,8 @@ import './index.css';
 import App from './App';
 import Login from './Login';
 import Register from './Register';
-import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import ResetPassword from './ResetPassword';
+import { BrowserRouter, Route, Switch, useParams } from 'react-router-dom';
 
 const routing = (
     <BrowserRouter>
@@ -17,6 +18,9 @@ const routing = (
             </Route>
             <Route path="/register">
                 <Register />
+            </Route>
+            <Route path="/resetpassword/:passwordToken" component={ResetPassword}>
+
             </Route>
         </Switch>
     </BrowserRouter>

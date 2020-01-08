@@ -11,6 +11,7 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, minlength: 4, maxlength: 255, lowercase: true, unique: true, validate: validateEmail },
   password: { type: String, required: true, minlength: 4, maxlength: 255 },
   date: { type: Date, default: Date.now },
+  passwordToken: { type: String },
 });
 const User = mongoose.model('user', UserSchema);
 module.exports = User;

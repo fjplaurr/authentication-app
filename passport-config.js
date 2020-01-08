@@ -5,12 +5,12 @@ const bcryptjs = require('bcryptjs');
 
 function configurePassport() {
   passport.use(new LocalStrategy({
-    usernameField: 'name',
+    usernameField: 'email',
   },
     function (username, password, done) {
-      User.findOne({ name: username }, function (err, user) {
+      User.findOne({ email: username }, function (err, user) {
         if (err) { return done(err); }
-        if (!user) { return done(null, false, { message: 'Incorrect username.' }); }
+        if (!user) { return done(null, false, { message: 'Incorrect email.' }); }
         bcryptjs.compare(password, user.password).then((res) => {
           if (res) {
             done(null, user)
