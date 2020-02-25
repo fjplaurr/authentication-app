@@ -1,32 +1,64 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-
+import React, { useState } from "react";
+import { useHistory } from "react-router-dom";
+import axios from "axios";
 
 export default function Login() {
-    function sendEmail() {
-        if (email) {
-            axios.post('http://localhost:3000/forgotpassword', { email }).then((res) => {
-                console.log('email is ');
-            });
-        }
+  const history = useHistory();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const sendEmail = async () => {
+    await axios.post("http://localhost:3001/forgotpassword", { email });
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const res = await axios.post("http://localhost:3001/login", {
+      email,
+      password
+    });
+    // No messages means the login was successful.
+    if (typeof res.data.message === "undefined") {
+      history.push("/");
     }
+  };
 
-    const [email, setEmail] = useState('');
-    return (
-        <>
-            <form action="/login" method="post">
-                <div className="emailWrapper">
-                    <label htmlFor="email">Email</label>
-                    <input onChange={(e) => { setEmail(e.target.value) }} type="email" id="email" name="email" required></input>
-                </div>
-                <div className="passwordWrapper">
-                    <label htmlFor="password">Password</label>
-                    <input type="password" id="password" name="password" required></input>
-                </div>
-                <input type="submit" value="Login"></input>
-            </form>
-            {<button onClick={() => sendEmail()}>Forgot password</button>}
-        </>
-    );
-
+  return (
+    <>
+      <form onSubmit={handleSubmit}>
+        <div className='emailWrapper'>
+          <label htmlFor='wew'>
+            Email
+            <input
+              onChange={(e) => {
+                setEmail(e.target.value);
+              }}
+              type='email'
+              id='email'
+              name='email'
+              required
+            />
+          </label>
+        </div>
+        <div className='passwordWrapper'>
+          <label htmlFor='email'>
+            Password
+            <input
+              onChange={(e) => {
+                setPassword(e.target.value);
+              }}
+              type='password'
+              id='password'
+              name='password'
+              required
+            />
+          </label>
+        </div>
+        <input value='Login' type='submit' />
+      </form>
+      <button type='button' onClick={sendEmail}>
+        Forgot password
+      </button>
+    </>
+  );
 }
